@@ -17,10 +17,15 @@ This add-on runs the Beszel Hub, which provides the web interface for viewing an
 ## Installation
 
 1. Add this repository to your Home Assistant instance
-2. Install the "Beszel Server Monitor" add-on
-3. Start the add-on
-4. Access the web interface at `http://homeassistant.local:8090`
-5. Create your admin account on first access
+  - Copy repo link
+  - Go to Add-Ons > Add-Ons Store in Home Assistant
+  - Click the 3 dot menu (top right) then, "Repositories"
+  - Paste the repo link into the field and save
+  - You should now see a new section in the Add-Ons Store for "Beszel Server Monitoring Add-On"
+3. Install the "Beszel Server Monitor" add-on
+4. Start the add-on
+5. Access the web interface at `http://homeassistant.local:8090` or `http://[[Home Assistant IP Address]]:8090`
+6. Create your admin account on first access
 
 ## Configuration
 
@@ -56,7 +61,7 @@ This should match the port you configure when adding the localhost system in the
 
 ### First Time Setup
 
-1. Open the Beszel web interface at `http://homeassistant.local:8090`
+1. Open the Beszel web interface at `http://homeassistant.local:8090` or `http://[[Home Assistant IP Address]]:8090`
 2. Create your admin account
 3. Go to Settings > Tokens to generate a universal token for connecting agents
 
@@ -85,7 +90,7 @@ To monitor other systems beyond your Home Assistant host, install the Beszel age
 
 #### Docker Agent Installation
 
-On each remote system you want to monitor, run:
+On each remote system you want to monitor, make sure you have installed docker, then run:
 
 ```bash
 docker run -d \
