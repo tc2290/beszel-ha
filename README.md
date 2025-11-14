@@ -1,31 +1,43 @@
-# Beszel Server Monitor - Home Assistant Add-on
+# Beszel Server Monitor
+
+![Supports aarch64 Architecture][aarch64-shield] ![Supports amd64 Architecture][amd64-shield] ![Supports armhf Architecture][armhf-shield] ![Supports armv7 Architecture][armv7-shield]
+
+[aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
+[amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
+[armhf-shield]: https://img.shields.io/badge/armhf-yes-green.svg
+[armv7-shield]: https://img.shields.io/badge/armv7-yes-green.svg
 
 Lightweight server monitoring hub with historical data, Docker stats, and alerts.
 
 ## About
 
-Beszel is a lightweight server monitoring platform that provides:
+Beszel is a lightweight server monitoring platform that includes:
 
-- **Docker/Podman stats** - Track CPU, memory, and network usage history per container
+- **Docker/Podman stats** - Track CPU, memory, and network usage per container
 - **Historical data** - View system metrics over time with detailed graphs
-- **Configurable alerts** - Get notified about CPU, memory, disk, bandwidth, temperature, and system status issues
+- **Configurable alerts** - Get notified across 20+ platforms (Discord, Slack, email, etc.)
+- **GPU monitoring** - Support for Nvidia, AMD, and Intel GPUs
 - **Multi-user support** - Each user manages their own systems
+- **OAuth/OIDC** - Multiple authentication providers
 - **REST API** - Build custom integrations
 
-This add-on runs the Beszel Hub, which provides the web interface for viewing and managing your monitored systems.
+This add-on runs the Beszel Hub (web interface) and optionally a local agent to monitor your Home Assistant host.
 
 ## Installation
 
-1. Add this repository to your Home Assistant instance
-  - Copy repo link
-  - Go to Add-Ons > Add-Ons Store in Home Assistant
-  - Click the 3 dot menu (top right) then, "Repositories"
-  - Paste the repo link into the field and click "Add"
-  - You should now see a new section in the Add-Ons Store for "Beszel Server Monitoring Add-On"
-3. Install the "Beszel Server Monitor" add-on
-4. Start the add-on
-5. Access the web interface at `http://homeassistant.local:8090` or `http://[[Home Assistant IP Address]]:8090`
-6. Create your admin account on first access
+1. Click the Home Assistant My button below to add this repository:
+
+   [![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https://github.com/tc2290/beszel-ha)
+
+   Or manually add the repository:
+   - Go to **Settings** → **Add-ons** → **Add-on Store** (bottom right)
+   - Click **⋮** (top right) → **Repositories**
+   - Add the repository URL and click **Add**
+
+2. Find "Beszel Server Monitor" in the add-on store and click **Install**
+3. Start the add-on
+4. Access the web interface at `http://homeassistant.local:8090`
+5. Create your admin account on first access
 
 ## Configuration
 
@@ -35,61 +47,32 @@ enable_agent: true
 agent_port: 45876
 ```
 
-### Option: `log_level`
+### Options
 
-The log level for the Beszel hub.
+- **`log_level`**: Verbosity of logs (`trace`, `debug`, `info`, `notice`, `warning`, `error`, `fatal`)
+- **`enable_agent`**: Enable built-in agent to monitor Home Assistant host (default: `true`)
+- **`agent_port`**: Port for localhost monitoring agent (default: `45876`)
 
-Valid values: `trace`, `debug`, `info`, `notice`, `warning`, `error`, `fatal`
+## Quick Start
 
-### Option: `enable_agent`
+### Monitor Your Home Assistant Host
 
-Enable the built-in Beszel agent to monitor the Home Assistant host (localhost).
+1. In the Beszel web UI, click **"Add System"**
+2. Configure:
+   - **Name**: `Home Assistant`
+   - **Host**: `127.0.0.1`
+   - **Port**: `45876`
+3. Copy the generated public key
+4. Add the key using Terminal add-on or SSH:
+   ```bash
+   echo 'YOUR_PUBLIC_KEY' > /config/beszel_data/agent_key
+   ```
+5. Restart this add-on
+6. Your Home Assistant system will appear in the dashboard
 
-Default: `true`
+### Monitor Remote Systems
 
-When enabled, the agent will run alongside the hub and allow you to monitor your Home Assistant system's resources (CPU, memory, disk, network) and Docker containers.
-
-### Option: `agent_port`
-
-The port for the localhost monitoring agent to listen on.
-
-Default: `45876`
-
-This should match the port you configure when adding the localhost system in the Beszel web interface.
-
-## Usage
-
-### First Time Setup
-
-1. Open the Beszel web interface at `http://homeassistant.local:8090` or `http://[[Home Assistant IP Address]]:8090`
-2. Create your admin account
-
-### Setting Up Localhost Monitoring
-
-The add-on includes a built-in agent to monitor your Home Assistant host. To enable it:
-
-1. In the Beszel web interface, click "Add System"
-2. Enter the following details:
-   - **Name**: `Home Assistant` (or your preferred name)
-   - **Host**: `127.0.0.1` (use IP address, not "localhost")
-   - **Port**: `45876` (or your configured `agent_port`)
-3. Copy the public key shown in the web interface
-4. Save the public key to the agent configuration:
-   - SSH into your Home Assistant host or use the Terminal add-on
-   - Run: `echo 'YOUR_PUBLIC_KEY' > /config/beszel_data/agent_key`
-   - Replace `YOUR_PUBLIC_KEY` with the actual key from step 3
-5. Restart the Beszel add-on from the Home Assistant add-ons page
-6. The localhost system will connect automatically and appear in your dashboard
-
-**Note**: After the first setup, the agent will start automatically on subsequent restarts.
-
-### Monitoring Additional Systems
-
-To monitor other systems beyond your Home Assistant host, install the Beszel agent on each system.
-
-#### Docker Agent Installation
-
-On each remote system you want to monitor, make sure you have installed docker, then run:
+Install the agent on remote systems using Docker:
 
 ```bash
 docker run -d \
@@ -102,44 +85,25 @@ docker run -d \
   henrygd/beszel-agent
 ```
 
-Replace `your-public-key-from-hub` with the key from your Beszel hub settings.
+Then add the system in the Beszel web interface with the remote host's IP address.
 
-#### Binary Installation (Linux)
+## Documentation
 
-Download and install the agent:
-
-```bash
-curl -sL "https://github.com/henrygd/beszel/releases/latest/download/beszel-agent_linux_amd64.tar.gz" | tar -xz -O beszel-agent | tee ./beszel-agent >/dev/null && chmod +x beszel-agent
-```
-
-Run the agent:
-
-```bash
-PORT=45876 KEY='your-public-key' ./beszel-agent
-```
-
-### Adding Remote Systems to Monitor
-
-1. In the Beszel web interface, click "Add System"
-2. Enter the system details:
-   - **Name**: A friendly name for the system
-   - **Host**: IP address or hostname of the remote system running the agent
-   - **Port**: `45876` (default)
-3. The system will appear in your dashboard once connected
+For detailed setup instructions, troubleshooting, and advanced configuration, see the [full documentation](DOCS.md).
 
 ## Features
 
-- **Lightweight** - Uses minimal resources compared to other monitoring solutions
-- **Docker Integration** - Automatically discovers and monitors Docker containers
-- **Historical Data** - View system metrics over time
-- **Alerts** - Configure notifications for various metrics across 20+ platforms
-- **GPU Monitoring** - Support for Nvidia, AMD, and Intel GPUs
-- **Multi-user** - Each user has their own systems, admins can share systems
-- **OAuth/OIDC** - Support for multiple authentication providers
+- Lightweight resource usage
+- Automatic Docker container discovery
+- Historical metrics with graphs
+- Customizable alerts
+- Multi-user management
+- OAuth/OIDC authentication
+- REST API access
 
 ## Data Storage
 
-All Beszel data is stored in `/config/beszel_data` within your Home Assistant configuration directory. This ensures your monitoring data persists across add-on updates.
+All data is stored in `/config/beszel_data` and persists across add-on updates.
 
 ## Support
 

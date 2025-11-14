@@ -16,7 +16,6 @@ RUN \
         amd64) ARCH="amd64" ;; \
         aarch64) ARCH="arm64" ;; \
         armhf|armv7) ARCH="arm" ;; \
-        i386) ARCH="amd64" ;; \
     esac \
     && wget -q -O /tmp/beszel.tar.gz \
         "https://github.com/henrygd/beszel/releases/download/v${BESZEL_VERSION}/beszel_linux_${ARCH}.tar.gz" \

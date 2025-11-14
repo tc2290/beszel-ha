@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.3.0 (2024-11-14)
+
+### Changed
+- **Migrated from JSON to YAML configuration**
+  - Converted `config.json` to `config.yaml` for better alignment with HA standards
+  - Configuration syntax remains the same for users
+- **Enhanced documentation**
+  - Added comprehensive `DOCS.md` with detailed setup and troubleshooting
+  - Simplified `README.md` for cleaner add-on store presentation
+  - Added architecture badges to README
+- **Improved agent key setup UX**
+  - Added prominent setup instructions in logs when agent key is missing
+  - Included step-by-step configuration guide on first startup
+  - Better visual formatting of setup instructions
+- **Enhanced error handling**
+  - Detailed error messages identifying which process failed (hub vs agent)
+  - Added common troubleshooting tips in error messages
+  - Graceful shutdown with timeout handling
+  - Prefixed log messages with `[Hub]` and `[Agent]` for clarity
+- **Better process management**
+  - Improved graceful shutdown with proper timeout handling (10s for hub, 5s for agent)
+  - Force-kill fallback if graceful shutdown times out
+  - Startup validation to detect early failures
+  - Clear status messages when processes start successfully
+
+### Added
+- **Watchdog health monitoring**
+  - Added `watchdog: http://localhost:8090/api/health` to config
+  - Enables Home Assistant Supervisor to monitor and restart if needed
+- **Agent key validation**
+  - Basic validation to detect invalid keys (minimum length check)
+  - Warning messages if agent key appears malformed
+
+### Removed
+- **Dropped i386 architecture support**
+  - i386 was incorrectly mapped to amd64 binaries
+  - Removed from config.yaml, build.json, and Dockerfile
+  - Supported architectures: aarch64, amd64, armhf, armv7
+
 ## 0.2.0
 
 - **Added built-in localhost monitoring agent**
