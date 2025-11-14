@@ -63,7 +63,6 @@ This should match the port you configure when adding the localhost system in the
 
 1. Open the Beszel web interface at `http://homeassistant.local:8090` or `http://[[Home Assistant IP Address]]:8090`
 2. Create your admin account
-3. Go to Settings > Tokens to generate a universal token for connecting agents
 
 ### Setting Up Localhost Monitoring
 
