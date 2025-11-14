@@ -20,7 +20,7 @@ This add-on runs the Beszel Hub, which provides the web interface for viewing an
   - Copy repo link
   - Go to Add-Ons > Add-Ons Store in Home Assistant
   - Click the 3 dot menu (top right) then, "Repositories"
-  - Paste the repo link into the field and save
+  - Paste the repo link into the field and click "Add"
   - You should now see a new section in the Add-Ons Store for "Beszel Server Monitoring Add-On"
 3. Install the "Beszel Server Monitor" add-on
 4. Start the add-on
