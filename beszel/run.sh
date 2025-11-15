@@ -62,7 +62,8 @@ if [ "${ENABLE_AGENT}" = "true" ]; then
 
             bashio::log.info "Starting Beszel agent for localhost monitoring..."
             # Start agent with error handling
-            if DOCKER_HOST="unix:///var/run/docker.sock" PORT="${AGENT_PORT}" KEY="${AGENT_KEY}" beszel-agent 2>&1 | while IFS= read -r line; do bashio::log.info "[Agent] ${line}"; done &
+            # Set HUB_URL to localhost since hub and agent run in same container
+            if DOCKER_HOST="unix:///var/run/docker.sock" HUB_URL="http://localhost:8090" PORT="${AGENT_PORT}" KEY="${AGENT_KEY}" beszel-agent 2>&1 | while IFS= read -r line; do bashio::log.info "[Agent] ${line}"; done &
             then
                 AGENT_PID=$!
                 bashio::log.info "Agent started with PID ${AGENT_PID}"

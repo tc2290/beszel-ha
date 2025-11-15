@@ -1,5 +1,5 @@
 name: Beszel Server Monitor
-version: "0.3.2"
+version: "0.3.3"
 slug: beszel
 description: Lightweight server monitoring hub with historical data, docker stats, and alerts
 url: https://github.com/henrygd/beszel
@@ -11,6 +11,7 @@ arch:
 startup: application
 boot: auto
 init: false
+advanced: true
 ports:
   8090/tcp: 8090
   45876/tcp: 45876

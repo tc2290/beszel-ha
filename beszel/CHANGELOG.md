@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.3 (2025-11-15)
+
+### Fixed
+- **Agent WebSocket connection**
+  - Added `HUB_URL` environment variable to agent startup
+  - Fixes "HUB_URL environment variable not set" warning
+- **Docker API access**
+  - Added `advanced: true` flag to ensure Docker API is accessible
+  - Required for non-protected add-ons to access Docker socket
+
 ## 0.3.2 (2025-11-15)
 
 ### Fixed
