@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1 (2025-11-15)
+
+### Changed
+- **Updated Beszel to v0.16.1**
+  - Services column for All Systems table
+  - Support for immutable filesystems
+  - Layout width settings
+  - Updated Go dependencies
+
 ## 0.3.0 (2024-11-14)
 
 ### Changed

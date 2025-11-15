@@ -1,5 +1,5 @@
 name: Beszel Server Monitor
-version: "0.3.0"
+version: "0.3.1"
 slug: beszel
 description: Lightweight server monitoring hub with historical data, docker stats, and alerts
 url: https://github.com/henrygd/beszel

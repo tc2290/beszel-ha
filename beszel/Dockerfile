@@ -11,7 +11,7 @@ RUN apk add --no-cache \
 # Download and install Beszel hub and agent
 ARG BUILD_ARCH
 RUN \
-    BESZEL_VERSION="0.16.0" \
+    BESZEL_VERSION="0.16.1" \
     && case "${BUILD_ARCH}" in \
         amd64) ARCH="amd64" ;; \
         aarch64) ARCH="arm64" ;; \
