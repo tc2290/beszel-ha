@@ -22,7 +22,7 @@ map:
 privileged:
   - SYS_ADMIN
 docker_api: true
-watchdog: http://localhost:8090/api/health
+watchdog: http://[HOST]:8090/api/health
 options:
   log_level: info
   enable_agent: true
