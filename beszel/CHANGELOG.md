@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.2 (2025-11-15)
+
+### Fixed
+- **Docker socket access**
+  - Added `hassio_api: true` and `hassio_role: default` to ensure proper Docker socket access
+  - Fixes "Docker socket not found" warning for container monitoring
+
 ## 0.3.1 (2025-11-15)
 
 ### Changed
