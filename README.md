@@ -1,14 +1,14 @@
-# Beszel Home Assistant Add-ons
+# Beszel Home Assistant Add-on
 
 ![Project Stage][project-stage-shield]
 
 [project-stage-shield]: https://img.shields.io/badge/project%20stage-production%20ready-brightgreen.svg
 
-Home Assistant add-ons for [Beszel](https://beszel.dev/) - a lightweight server monitoring platform.
+Home Assistant add-on for [Beszel](https://beszel.dev/) - a lightweight server monitoring platform.
 
 ## About
 
-This repository contains Home Assistant add-ons for Beszel, a lightweight server monitoring platform that provides:
+This repository contains a Home Assistant add-on for Beszel, a lightweight server monitoring platform that provides:
 
 - **Docker/Podman stats** - Track CPU, memory, and network usage per container
 - **Historical data** - View system metrics over time with detailed graphs
