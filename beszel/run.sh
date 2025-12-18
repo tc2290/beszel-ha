@@ -11,6 +11,60 @@ bashio::log.info "Log level: ${LOG_LEVEL}"
 # Set data directory to persistent storage
 export BESZEL_DATA_DIR="/config/beszel_data"
 
+# Check for Beszel updates
+check_beszel_version() {
+    bashio::log.info "Checking for Beszel updates..."
+
+    # Get installed version
+    INSTALLED_VERSION=$(beszel --version 2>&1 | grep -oP 'v\d+\.\d+\.\d+' || echo "unknown")
+
+    # Get latest version from GitHub API
+    LATEST_VERSION=$(curl -s https://api.github.com/repos/henrygd/beszel/releases/latest | jq -r '.tag_name' 2>/dev/null || echo "unknown")
+
+    if [ "$INSTALLED_VERSION" = "unknown" ] || [ "$LATEST_VERSION" = "unknown" ]; then
+        bashio::log.debug "Could not determine version information"
+        return
+    fi
+
+    bashio::log.info "Installed version: ${INSTALLED_VERSION}"
+    bashio::log.info "Latest version: ${LATEST_VERSION}"
+
+    # Compare versions (remove 'v' prefix for comparison)
+    INSTALLED_NUM="${INSTALLED_VERSION#v}"
+    LATEST_NUM="${LATEST_VERSION#v}"
+
+    if [ "$INSTALLED_NUM" != "$LATEST_NUM" ]; then
+        bashio::log.warning "╔════════════════════════════════════════════════════════════════════════╗"
+        bashio::log.warning "║  NEW BESZEL VERSION AVAILABLE!                                         ║"
+        bashio::log.warning "╚════════════════════════════════════════════════════════════════════════╝"
+        bashio::log.warning "Current: ${INSTALLED_VERSION} → Available: ${LATEST_VERSION}"
+        bashio::log.warning "Rebuild the add-on to update to the latest version."
+        bashio::log.warning "════════════════════════════════════════════════════════════════════════"
+
+        # Send persistent notification to Home Assistant
+        if bashio::supervisor.ping; then
+            bashio::log.info "Sending update notification to Home Assistant..."
+
+            # Create notification via Supervisor API
+            curl -sSL -X POST \
+                -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+                -H "Content-Type: application/json" \
+                -d "{
+                    \"message\": \"Beszel ${LATEST_VERSION} is available! You are running ${INSTALLED_VERSION}. Rebuild the add-on to update.\",
+                    \"title\": \"Beszel Update Available\",
+                    \"notification_id\": \"beszel_update_available\"
+                }" \
+                http://supervisor/core/api/services/persistent_notification/create 2>/dev/null || \
+                bashio::log.debug "Could not send notification to Home Assistant"
+        fi
+    else
+        bashio::log.info "✓ Beszel is up to date (${INSTALLED_VERSION})"
+    fi
+}
+
+# Perform version check
+check_beszel_version
+
 # Create data directory if it doesn't exist
 mkdir -p "${BESZEL_DATA_DIR}"
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.4 (2025-12-18)
+
+### Changed
+- **Updated Beszel to use latest release**
+  - Dockerfile now uses GitHub's `latest` release tag
+  - Add-on automatically pulls the most recent Beszel version when rebuilt
+  - No need to manually update version numbers for new Beszel releases
+
+### Added
+- **Automatic update notifications**
+  - Checks for new Beszel versions on startup
+  - Sends persistent notification to Home Assistant when updates are available
+  - Displays current and available versions in add-on logs
+  - Reminds users to rebuild the add-on to get the latest version
+
 ## 0.3.3 (2025-11-15)
 
 ### Fixed
