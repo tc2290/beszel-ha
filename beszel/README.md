@@ -37,6 +37,7 @@ This add-on runs the Beszel Hub (web interface) and optionally a local agent to 
 log_level: info
 enable_agent: true
 agent_port: 45876
+beszel_version: "latest"
 ```
 
 ### Options
@@ -44,6 +45,7 @@ agent_port: 45876
 - **`log_level`**: Verbosity of logs (`trace`, `debug`, `info`, `notice`, `warning`, `error`, `fatal`)
 - **`enable_agent`**: Enable built-in agent to monitor Home Assistant host (default: `true`)
 - **`agent_port`**: Port for localhost monitoring agent (default: `45876`)
+- **`beszel_version`**: Beszel release to run. Use `"latest"` (default) to always update on restart, or pin to a tag like `"v0.9.0"` to lock the version. A persistent HA notification is sent when a newer release exists while pinned.
 
 ## Quick Start
 

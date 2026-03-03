@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 (2026-03-03)
+
+### Changed
+- **Runtime version management** — Beszel binaries are now downloaded at container start rather than baked into the Docker image. This means the add-on always runs the version you configure without requiring a rebuild.
+
+### Added
+- **`beszel_version` configuration option**
+  - Set to `"latest"` (default) to automatically download the newest Beszel release on each restart
+  - Pin to a specific release tag (e.g. `"v0.9.0"`) to lock the version
+  - When a pinned version is running and a newer release exists, a persistent Home Assistant notification is sent and a warning is shown in the logs — set `beszel_version: "latest"` to update
+  - Graceful fallback: if GitHub is unreachable and a binary is already installed, startup continues with the existing binary
+
 ## 0.3.4 (2025-12-18)
 
 ### Changed

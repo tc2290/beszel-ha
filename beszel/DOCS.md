@@ -24,6 +24,7 @@ The add-on supports the following configuration options:
 log_level: info
 enable_agent: true
 agent_port: 45876
+beszel_version: "latest"
 ```
 
 ### Option: `log_level`
@@ -68,6 +69,27 @@ agent_port: 45876
 ```
 
 This port must match the port you configure when adding the localhost system in the Beszel web interface. Only change this if you have a port conflict.
+
+### Option: `beszel_version`
+
+Controls which version of Beszel is downloaded and run at container start.
+
+**Default:** `"latest"`
+
+**Examples:**
+```yaml
+# Always run the newest release (updates on every restart)
+beszel_version: "latest"
+
+# Pin to a specific release
+beszel_version: "v0.9.0"
+```
+
+When set to `"latest"`, the add-on queries the GitHub API on every restart and downloads the newest release if the installed version differs. No rebuild is required to update Beszel.
+
+When set to a pinned tag, that exact version is installed. If a newer release exists on GitHub, a persistent notification is sent to Home Assistant and a warning appears in the logs. Set `beszel_version: "latest"` to update.
+
+If the GitHub API is unreachable at startup and a binary is already installed, the add-on continues running with the existing binary and logs a warning. If no binary is installed and the API is unreachable, startup fails.
 
 ## Usage
 

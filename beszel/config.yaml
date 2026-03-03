@@ -1,5 +1,5 @@
 name: Beszel Server Monitor
-version: "0.3.4"
+version: "0.4.0"
 slug: beszel
 description: Lightweight server monitoring hub with historical data, docker stats, and alerts
 url: https://github.com/henrygd/beszel
@@ -30,7 +30,9 @@ options:
   log_level: info
   enable_agent: true
   agent_port: 45876
+  beszel_version: "latest"
 schema:
   log_level: list(trace|debug|info|notice|warning|error|fatal)?
   enable_agent: bool
   agent_port: port?
+  beszel_version: str?

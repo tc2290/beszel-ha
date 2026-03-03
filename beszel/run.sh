@@ -4,6 +4,7 @@
 LOG_LEVEL=$(bashio::config 'log_level')
 ENABLE_AGENT=$(bashio::config 'enable_agent')
 AGENT_PORT=$(bashio::config 'agent_port')
+BESZEL_VERSION_CONFIG=$(bashio::config 'beszel_version' 'latest')
 
 bashio::log.info "Starting Beszel Server Monitor..."
 bashio::log.info "Log level: ${LOG_LEVEL}"
@@ -11,59 +12,153 @@ bashio::log.info "Log level: ${LOG_LEVEL}"
 # Set data directory to persistent storage
 export BESZEL_DATA_DIR="/config/beszel_data"
 
-# Check for Beszel updates
-check_beszel_version() {
-    bashio::log.info "Checking for Beszel updates..."
+# Detect CPU architecture and map to Beszel release label
+detect_arch() {
+    local machine
+    machine=$(uname -m)
+    case "${machine}" in
+        x86_64)         echo "amd64" ;;
+        aarch64)        echo "arm64" ;;
+        armv7l|armhf|armv7) echo "arm" ;;
+        *)
+            bashio::log.error "Unsupported architecture: ${machine}"
+            exit 1
+            ;;
+    esac
+}
 
-    # Get installed version
-    INSTALLED_VERSION=$(beszel --version 2>&1 | grep -oP 'v\d+\.\d+\.\d+' || echo "unknown")
+# Download a single beszel binary tarball and install it to /usr/local/bin
+# Usage: download_beszel_binary <binary_name> <version> <arch>
+# Returns 0 on success, 1 on failure
+download_beszel_binary() {
+    local binary_name="$1"
+    local version="$2"
+    local arch="$3"
+    local tarball="/tmp/${binary_name}.tar.gz"
+    local url
 
-    # Get latest version from GitHub API
-    LATEST_VERSION=$(curl -s https://api.github.com/repos/henrygd/beszel/releases/latest | jq -r '.tag_name' 2>/dev/null || echo "unknown")
-
-    if [ "$INSTALLED_VERSION" = "unknown" ] || [ "$LATEST_VERSION" = "unknown" ]; then
-        bashio::log.debug "Could not determine version information"
-        return
+    if [ "${version}" = "latest" ]; then
+        url="https://github.com/henrygd/beszel/releases/latest/download/${binary_name}_linux_${arch}.tar.gz"
+    else
+        url="https://github.com/henrygd/beszel/releases/download/${version}/${binary_name}_linux_${arch}.tar.gz"
     fi
 
-    bashio::log.info "Installed version: ${INSTALLED_VERSION}"
-    bashio::log.info "Latest version: ${LATEST_VERSION}"
+    bashio::log.info "Downloading ${binary_name} from ${url}..."
+    if ! wget -q -O "${tarball}" "${url}"; then
+        bashio::log.warning "Failed to download ${binary_name}"
+        rm -f "${tarball}"
+        return 1
+    fi
 
-    # Compare versions (remove 'v' prefix for comparison)
-    INSTALLED_NUM="${INSTALLED_VERSION#v}"
-    LATEST_NUM="${LATEST_VERSION#v}"
+    if ! tar -xzf "${tarball}" -C /usr/local/bin/ "${binary_name}" 2>/dev/null; then
+        bashio::log.warning "Failed to extract ${binary_name}"
+        rm -f "${tarball}"
+        return 1
+    fi
 
-    if [ "$INSTALLED_NUM" != "$LATEST_NUM" ]; then
-        bashio::log.warning "╔════════════════════════════════════════════════════════════════════════╗"
-        bashio::log.warning "║  NEW BESZEL VERSION AVAILABLE!                                         ║"
-        bashio::log.warning "╚════════════════════════════════════════════════════════════════════════╝"
-        bashio::log.warning "Current: ${INSTALLED_VERSION} → Available: ${LATEST_VERSION}"
-        bashio::log.warning "Rebuild the add-on to update to the latest version."
-        bashio::log.warning "════════════════════════════════════════════════════════════════════════"
+    chmod +x "/usr/local/bin/${binary_name}"
+    rm -f "${tarball}"
+    return 0
+}
 
-        # Send persistent notification to Home Assistant
-        if bashio::supervisor.ping; then
-            bashio::log.info "Sending update notification to Home Assistant..."
+# Install or update beszel binaries based on configured version
+install_or_update_beszel() {
+    local configured_version="$1"
+    local arch
+    local installed_version
+    local target_version
 
-            # Create notification via Supervisor API
-            curl -sSL -X POST \
-                -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
-                -H "Content-Type: application/json" \
-                -d "{
-                    \"message\": \"Beszel ${LATEST_VERSION} is available! You are running ${INSTALLED_VERSION}. Rebuild the add-on to update.\",
-                    \"title\": \"Beszel Update Available\",
-                    \"notification_id\": \"beszel_update_available\"
-                }" \
-                http://supervisor/core/api/services/persistent_notification/create 2>/dev/null || \
-                bashio::log.debug "Could not send notification to Home Assistant"
+    # Detect architecture
+    arch=$(detect_arch)
+    bashio::log.info "Detected architecture: ${arch}"
+
+    # Get installed version (or "none" if not present)
+    if command -v beszel &>/dev/null; then
+        installed_version=$(beszel --version 2>&1 | grep -oP 'v\d+\.\d+\.\d+' || echo "none")
+    else
+        installed_version="none"
+    fi
+
+    # Resolve target version
+    if [ "${configured_version}" = "latest" ]; then
+        bashio::log.info "Checking GitHub for latest Beszel release..."
+        target_version=$(curl -sf https://api.github.com/repos/henrygd/beszel/releases/latest | jq -r '.tag_name' 2>/dev/null || echo "")
+
+        if [ -z "${target_version}" ] || [ "${target_version}" = "null" ]; then
+            if [ "${installed_version}" != "none" ]; then
+                bashio::log.warning "Could not reach GitHub API — continuing with installed version ${installed_version}"
+                return 0
+            else
+                bashio::log.error "Could not reach GitHub API and no binary is installed — cannot start"
+                exit 1
+            fi
         fi
     else
-        bashio::log.info "✓ Beszel is up to date (${INSTALLED_VERSION})"
+        target_version="${configured_version}"
+    fi
+
+    bashio::log.info "Installed: ${installed_version}  |  Target: ${target_version}"
+
+    # Install or update if versions differ
+    if [ "${installed_version}" != "${target_version}" ]; then
+        bashio::log.info "Installing Beszel ${target_version}..."
+
+        local download_ok=true
+        if ! download_beszel_binary "beszel" "${configured_version}" "${arch}"; then
+            download_ok=false
+        fi
+        if ! download_beszel_binary "beszel-agent" "${configured_version}" "${arch}"; then
+            download_ok=false
+        fi
+
+        if [ "${download_ok}" = "false" ]; then
+            if [ "${installed_version}" != "none" ]; then
+                bashio::log.warning "Download failed — continuing with existing binary ${installed_version}"
+                return 0
+            else
+                bashio::log.error "Download failed and no binary is installed — cannot start"
+                exit 1
+            fi
+        fi
+
+        bashio::log.info "✓ Beszel updated to ${target_version}"
+    else
+        bashio::log.info "✓ Beszel is up to date (${installed_version})"
+    fi
+
+    # For pinned versions: check if a newer release exists and notify
+    if [ "${configured_version}" != "latest" ]; then
+        bashio::log.info "Checking GitHub for newer Beszel releases..."
+        local latest_version
+        latest_version=$(curl -sf https://api.github.com/repos/henrygd/beszel/releases/latest | jq -r '.tag_name' 2>/dev/null || echo "")
+
+        if [ -n "${latest_version}" ] && [ "${latest_version}" != "null" ] && [ "${latest_version}" != "${target_version}" ]; then
+            bashio::log.warning "╔════════════════════════════════════════════════════════════════════════╗"
+            bashio::log.warning "║  NEW BESZEL VERSION AVAILABLE!                                         ║"
+            bashio::log.warning "╚════════════════════════════════════════════════════════════════════════╝"
+            bashio::log.warning "Pinned: ${target_version} → Available: ${latest_version}"
+            bashio::log.warning "Set beszel_version to 'latest' in add-on config to update."
+            bashio::log.warning "════════════════════════════════════════════════════════════════════════"
+
+            if bashio::supervisor.ping; then
+                bashio::log.info "Sending update notification to Home Assistant..."
+                curl -sSL -X POST \
+                    -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+                    -H "Content-Type: application/json" \
+                    -d "{
+                        \"message\": \"Beszel ${latest_version} is available! You are running ${target_version}. Set beszel_version to 'latest' in the add-on configuration to update.\",
+                        \"title\": \"Beszel Update Available\",
+                        \"notification_id\": \"beszel_update_available\"
+                    }" \
+                    http://supervisor/core/api/services/persistent_notification/create 2>/dev/null || \
+                    bashio::log.debug "Could not send notification to Home Assistant"
+            fi
+        fi
     fi
 }
 
-# Perform version check
-check_beszel_version
+# Install / update Beszel binaries
+install_or_update_beszel "${BESZEL_VERSION_CONFIG}"
 
 # Create data directory if it doesn't exist
 mkdir -p "${BESZEL_DATA_DIR}"
